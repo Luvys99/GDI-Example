@@ -24,18 +24,30 @@
     <ClInclude Include="Resource.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="WindowsProject2.h">
+    <ClInclude Include="WinMain.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Render.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="MsgProcess.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ASTAR.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="WindowsProject2.cpp">
+    <ClCompile Include="WinMain.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Render.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="MsgProcess.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="ASTAR.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
