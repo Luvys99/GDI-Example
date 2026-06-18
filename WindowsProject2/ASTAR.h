@@ -34,21 +34,9 @@ struct Node
 class ASTAR
 {
 public:
-	ASTAR() : startNode(nullptr), m_startX(-1), m_startY(-1), m_destX(-1), m_destY(-1) 
-	{
-		for (int y = 0; y < GRID_HEIGHT; y++)
-		{
-			for (int x = 0; x < GRID_WIDTH; x++)
-			{
-				m_nodeMap[y][x] = nullptr;
-			}
-		}
-
-		startNode = nullptr;
-	}
+	ASTAR() : startNode(nullptr), m_startX(-1), m_startY(-1), m_destX(-1), m_destY(-1) { }
 	~ASTAR() {}
 
-	void CreateStartNode(int startX, int startY);
 	inline Node* GetStartNode() const noexcept { return startNode; }
 	inline int GetStartX() const noexcept { return m_startX; }
 	inline int GetStartY() const noexcept { return m_startY; }
@@ -60,23 +48,25 @@ public:
 		OpenList.push_back(node);
 	}
 
+	void CreateStartNode(int startX, int startY) noexcept;
+
 	// 오픈 리스트가 비어있는지 확인
-	inline bool IsEmptyList() { return OpenList.empty(); }
+	inline bool IsEmptyList() const noexcept { return OpenList.empty(); }
 
 	// 목적지 좌표 저장
-	void SetDestPos(int destX, int destY);
+	void SetDestPos(int destX, int destY) noexcept; 
 
 	// A* 알고리즘으로 길 찾기
 	bool FindPathStep();
 
 	// 유효한 노드인지 검사하는 함수
-	bool IsValidNode(int curX, int curY, int xPos, int yPos, Node* node);
+	bool IsValidNode(int curX, int curY, int xPos, int yPos, Node* node) const noexcept;
 
 	// 길찾기 할 때마다 초기화함
-	void InitStarTNode();
+	void InitAStarPos() noexcept;
 
 	// 2D 노드맵 순회하면서 메모리 해체 ( 초기화 )
-	void ClearPathData();
+	void ClearPathData() noexcept;
 
 	// 클로즈 리스트를 순회해서 좌표를 찾는 것은 탐색이 진행될수록
 	// 순회해야 하는 리스트가 너무 커지기 때문에 검사 속도가 굉장히 느려진다.

@@ -146,14 +146,13 @@ void OnKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
     if (wParam == 'C' || wParam == 'c')
     {
-        // 타일, 오픈 리스트, 노드등 해제 또는 초기화
+        // 타일, 오픈 리스트, 노드맵 초기화
         memset(g_Tile, 0, sizeof(g_Tile));
-        g_astar.InitStarTNode();
+        g_astar.ClearPathData();
 
-        // 카메라 상태도 홈 위치로 초기화
-        scale = 1.0f;
-        camX = 250.0f; // 좌측 UI 영역을 위해 약간 오른쪽에서 시작
-        camY = 50.0f;
+        //출발지, 목적지 색도 없애기
+        g_astar.InitAStarPos();
+        g_isfinished = false;
 
         InvalidateRect(hWnd, NULL, false);
     }
@@ -164,13 +163,11 @@ void OnKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
         // !(lParam & (1 << 30))를 검사하면 키보드 꾹 누름으로 인한 KEYDOWN이 무제한 발생하는 것을 방지
         if (!g_isrunning && !(lParam & (1 << 30)))
         {
-
             // 중복호출안 되도록 막는 동안 간격을 10ms 정도로 줄임
             SetTimer(hWnd, TIMER_ASTAR_STEP, 10, NULL);
             g_isrunning = true;
         }
     }
-
 }
 
 void OnKeyUp(HWND hWnd, WPARAM wParam, LPARAM lParam)
@@ -202,6 +199,7 @@ void OnTimer(HWND hWnd, WPARAM wParam)
         {
             KillTimer(hWnd, TIMER_ASTAR_STEP);
             g_isrunning = false;
+            g_isfinished = true;
         }
     }
 

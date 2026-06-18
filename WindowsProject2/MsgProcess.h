@@ -10,6 +10,7 @@ inline WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니
 inline WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 inline ASTAR g_astar;
 inline bool g_isrunning = false;
+inline bool g_isfinished = false;
 
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 

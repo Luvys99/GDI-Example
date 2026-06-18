@@ -1,21 +1,14 @@
 #include "ASTAR.h"
 #include "Render.h"
 #include <algorithm>
+#include "MsgProcess.h"
 
-void ASTAR::CreateStartNode(int startX, int startY)
+void ASTAR::CreateStartNode(int startX, int startY) noexcept
 {
-	// 매번 출발지 선택할 때 초기화
-	/*if (startNode != nullptr)
-	{
-		delete startNode;
-		startNode = nullptr;
-	}*/
-
 	// 시작 노드 생성
 	startNode = new Node();
 	startNode->xPos = startX;
 	startNode->yPos = startY;
-	startNode->CalculateHeuristic(startX, startY);
 
 	m_nodeMap[startY][startX] = startNode;
 
@@ -23,7 +16,7 @@ void ASTAR::CreateStartNode(int startX, int startY)
 	m_startY = startY;
 }
 
-void ASTAR::SetDestPos(int destX, int destY)
+void ASTAR::SetDestPos(int destX, int destY) noexcept
 {
 	m_destX = destX;
 	m_destY = destY;
@@ -129,7 +122,7 @@ bool ASTAR::FindPathStep()
 
 }
 
-bool ASTAR::IsValidNode(int curX, int curY, int xPos, int yPos, Node* node)
+bool ASTAR::IsValidNode(int curX, int curY, int xPos, int yPos, Node* node) const noexcept
 {
 
 	// 맵 밖인지 검사
@@ -162,7 +155,7 @@ Node* ASTAR::GetNodeFromMap(int xPos, int yPos)
 
 }
 
-void ASTAR::ClearPathData()
+void ASTAR::ClearPathData() noexcept
 {
 
 	// 2D 노드 맵 순회해서 메모리 해제
@@ -170,10 +163,10 @@ void ASTAR::ClearPathData()
 	{
 		for (int x = 0; x < GRID_WIDTH; x++)
 		{
+			// startNode에 해당하는 맵은 제외하고 전부 삭제
 			if (m_nodeMap[y][x] != nullptr)
 			{
 				delete m_nodeMap[y][x];
-
 				m_nodeMap[y][x] = nullptr;
 			}
 		}
@@ -184,23 +177,12 @@ void ASTAR::ClearPathData()
 
 }
 
-void ASTAR::InitStarTNode()
+void ASTAR::InitAStarPos() noexcept
 {
-	// 1. 기존 찌꺼기 완벽하게 청소
-	ClearPathData();
+	
+	m_startX = -1;
+	m_startY = -1;
+	m_destX = -1;
+	m_destY = -1;
 
-	// 2. 출발지나 목적지가 아직 맵에 안 찍혀있으면 시작 불가 (방어 코드)
-	if (m_startX == -1 || m_destX == -1) return;
-
-	// 3. 텅 빈 오픈 리스트에 출발점 노드를 다시 1빠로 넣어줌! (핵심)
-	Node* startNode = new Node();
-	startNode->xPos = m_startX;
-	startNode->yPos = m_startY;
-
-	m_nodeMap[m_startY][m_startX] = startNode; // 서랍장에 넣기
-
-	startNode->isOpen = true; // 파란색 칠할 준비
-
-	// 이 노드부터 탐색이 뻗어나가도록 오픈 리스트에 장전!
-	OpenList.push_back(startNode);
 }
