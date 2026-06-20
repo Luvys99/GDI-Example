@@ -2,6 +2,9 @@
 #include <vector>
 #include "Render.h"
 
+// 방향
+
+
 struct Node
 {
 	int xPos;
@@ -9,6 +12,7 @@ struct Node
 	int h;
 	int g;
 	int f;
+	bool isvisited;
 	bool isOpen;
 	bool isClose;
 	bool isPath;
@@ -17,7 +21,8 @@ struct Node
 	{
 		parentNode = nullptr;
 		h = 0, g = 0;
-		xPos = -1, yPos = -1; // -1이라면 아직 노드가 만들어지지 않음
+		xPos = -1, yPos = -1; 
+		isvisited = false;
 		isOpen = false;
 		isClose = false;
 		isPath = false;
@@ -31,11 +36,10 @@ struct Node
 	}
 };
 
-class ASTAR
+class JPS
 {
 public:
-	ASTAR() : startNode(nullptr), m_startX(-1), m_startY(-1), m_destX(-1), m_destY(-1) { }
-	~ASTAR() {}
+	JPS() : startNode(nullptr), m_startX(-1), m_startY(-1), m_destX(-1), m_destY(-1) { }
 
 	inline Node* GetStartNode() const noexcept { return startNode; }
 	inline int GetStartX() const noexcept { return m_startX; }
@@ -48,33 +52,36 @@ public:
 		OpenList.push_back(node);
 	}
 
+	// 시작 노드 생성
 	void CreateStartNode(int startX, int startY) noexcept;
 
-	// 오픈 리스트가 비어있는지 확인
-	inline bool IsEmptyList() const noexcept { return OpenList.empty(); }
+	// 노드 생성
+	void CreateNode(int curX, int curY, Node* currentNode) noexcept;
 
 	// 목적지 좌표 저장
-	void SetDestPos(int destX, int destY) noexcept; 
-
-	// A* 알고리즘으로 길 찾기
-	bool FindPathStep();
-
-	// 유효한 노드인지 검사하는 함수
-	bool IsValidNode(int curX, int curY, int xPos, int yPos, Node* node) const noexcept;
+	void SetDestPos(int destX, int destY) noexcept;
 
 	// 길찾기 할 때마다 초기화함
 	void InitAStarPos() noexcept;
 
-	// 2D 노드맵 순회하면서 메모리 해체 ( 초기화 )
-	void ClearPathData() noexcept;
+	// JPS 알고리즘으로 길 찾기
+	bool FindPathStep();
 
-	// 클로즈 리스트를 순회해서 좌표를 찾는 것은 탐색이 진행될수록
-	// 순회해야 하는 리스트가 너무 커지기 때문에 검사 속도가 굉장히 느려진다.
-	Node* m_nodeMap[GRID_HEIGHT][GRID_WIDTH];
-	Node* GetNodeFromMap(int xPos, int yPos);
+	// 8방향으로 탐색하는 함수들
+	// 수직, 수평
+	void JumpToLL(int curx, int cury, Node* currentNode);
+	void JumpToDD(int curx, int cury, Node* currentNode);
+	void JumpToRR(int curx, int cury, Node* currentNode);
+	void JumpToUU(int curx, int cury, Node* currentNode);
+	// 대각선
+	void JumpToRU(int curx, int cury, Node* currentNode);
+	void JumpToRD(int curx, int cury, Node* currentNode);
+	void JumpToLU(int curx, int cury, Node* currentNode);
+	void JumpToLD(int curx, int cury, Node* currentNode);
+	void JumpToLL(int curx, int cury, Node* currentNode);
+
 
 private:
-	// GDI 그리기 위해 저장하는 출발점, 목적지 좌표
 	int m_startX;
 	int m_startY;
 	int m_destX;
@@ -82,4 +89,9 @@ private:
 
 	Node* startNode;
 	std::vector<Node*> OpenList;
+	bool CloseList[GRID_HEIGHT][GRID_WIDTH];
+	
+	Node* m_nodeMap[GRID_HEIGHT][GRID_WIDTH];
+	Node* GetNodeFromMap(int xPos, int yPos) const noexcept;
+
 };

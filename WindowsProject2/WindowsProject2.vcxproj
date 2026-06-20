@@ -133,6 +133,7 @@
   <ItemGroup>
     <ClInclude Include="ASTAR.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="JumpPointSearch.h" />
     <ClInclude Include="MsgProcess.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="Resource.h" />
@@ -141,6 +142,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ASTAR.cpp" />
+    <ClCompile Include="JumpPointSearch.cpp" />
     <ClCompile Include="MsgProcess.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="WinMain.cpp" />
