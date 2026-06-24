@@ -55,7 +55,7 @@ struct CompareNode
 class JPS
 {
 public:
-	JPS() : startNode(nullptr), m_startX(-1), m_startY(-1), m_destX(-1), m_destY(-1), CountOfDirections(0){ }
+	JPS() : startNode(nullptr), m_startX(-1), m_startY(-1), m_destX(-1), m_destY(-1), m_currentStepCount(0){ }
 
 	inline JPSNode* GetStartNode() const noexcept { return startNode; }
 	inline int GetStartX() const noexcept { return m_startX; }
@@ -83,6 +83,7 @@ public:
 	// 길찾기 할 때마다 초기화함
 	void InitAStarPos() noexcept;
 
+	// 오픈리스트, 리스트 전부 초기화 ( Node delete )
 	void ClearPathData() noexcept;
 
 	// JPS 알고리즘으로 길 찾기
@@ -101,6 +102,9 @@ public:
 	std::pair<int, int> JumpToLD(int curx, int cury, JPSNode* parentNode);
 
 	JPSNode* GetNodeFromMap(int xPos, int yPos) const noexcept;
+
+	int m_visitedOrder[GRID_HEIGHT][GRID_WIDTH] = { 0, 0 };
+	int m_currentStepCount; // 탐색 횟수 ( 횟수 따라 색 변경 )
 private:
 	int m_startX;
 	int m_startY;
@@ -110,8 +114,6 @@ private:
 	JPSNode* startNode;
 	// 우선순위 큐로 구현한 오픈 리스트( 최소 힙 )
 	std::priority_queue<JPSNode*,std::vector<JPSNode*>, CompareNode> OpenList;
-	std::vector<JPSNode*> CloseList;
 
 	JPSNode* m_nodeMap[GRID_HEIGHT][GRID_WIDTH];
-	int CountOfDirections; // 탐색 횟수 ( 횟수 따라 색 변경 )
 };

@@ -48,6 +48,55 @@ void RenderObstacle(HDC hdc)
 	// 확대한 그리드 간격 계산
 	float currentDrawSize = GRID_SIZE * scale;
 
+	// 길찾기 스텝마다 다르게 칠할 고정 색상 팔레트 준비
+	COLORREF stepColors[] = {
+		RGB(255, 105, 180), // 1: 핫핑크
+		RGB(147, 112, 219), // 2: 연보라
+		RGB(32, 178, 170),  // 3: 청록색
+		RGB(218, 165, 32),  // 4: 주황/골드
+		RGB(100, 149, 237), // 5: 콘플라워 블루
+		RGB(154, 205, 50),  // 6: 옐로우 그린
+		RGB(255, 127, 80),  // 7: 코랄 (살구색)
+		RGB(123, 104, 238), // 8: 슬레이트 블루
+		RGB(0, 206, 209),   // 9: 다크 터콰이즈
+		RGB(255, 160, 122), // 10: 라이트 살몬
+		RGB(218, 112, 214), // 11: 오키드 (난초색)
+		RGB(0, 191, 255),   // 12: 딥 스카이 블루
+		RGB(240, 230, 140), // 13: 카키
+		RGB(255, 99, 71),   // 14: 토마토 레드
+		RGB(60, 179, 113)   // 15: 미디엄 씨 그린
+	};
+	int paletteSize = sizeof(stepColors) / sizeof(stepColors[0]);
+
+	// 궤적 칠하기
+	for (int y = 0; y < GRID_HEIGHT; ++y)
+	{
+		for (int x = 0; x < GRID_WIDTH; ++x)
+		{
+			int stepNum = g_jps.m_visitedOrder[y][x];
+
+			// 방문한 적이 있는 타일이라면 (stepNum이 1 이상)
+			if (stepNum > 0)
+			{
+				// 스텝 번호에 맞춰 팔레트에서 색상 꺼내기 
+				// (배열 인덱스는 0부터 시작하므로 stepNum - 1)
+				COLORREF targetColor = stepColors[(stepNum - 1) % paletteSize];
+
+				HBRUSH hBrush = CreateSolidBrush(targetColor);
+
+				RECT rect;
+				rect.left = (int)(camX + (x * currentDrawSize));
+				rect.top = (int)(camY + (y * currentDrawSize));
+				rect.right = (int)(rect.left + currentDrawSize) + 1;
+				rect.bottom = (int)(rect.top + currentDrawSize) + 1;
+
+				FillRect(hdc, &rect, hBrush);
+				DeleteObject(hBrush); // 메모리 누수 방지
+			}
+		}
+	}
+
+	// 출발지, 목적지, 최종경로 색칠
 	for (int iCntW = 0; iCntW < GRID_WIDTH; iCntW++)
 	{
 		for (int iCntH = 0; iCntH < GRID_HEIGHT; iCntH++)

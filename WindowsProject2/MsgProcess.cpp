@@ -154,6 +154,9 @@ void OnKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
         g_jps.InitAStarPos();
         g_isfinished = false;
 
+        // 타일 색 초기화
+        memset(g_jps.m_visitedOrder, 0, sizeof(g_jps.m_visitedOrder));
+
         InvalidateRect(hWnd, NULL, false);
     }
 
@@ -164,7 +167,7 @@ void OnKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
         if (!g_isrunning && !(lParam & (1 << 30)))
         {
             // 중복호출안 되도록 막는 동안 간격을 10ms 정도로 줄임
-            SetTimer(hWnd, TIMER_ASTAR_STEP, 10, NULL);
+            SetTimer(hWnd, TIMER_ASTAR_STEP, 100, NULL);
             g_isrunning = true;
         }
     }
@@ -332,7 +335,7 @@ void OnCreate(HWND hWnd)
     g_hBrushStart = CreateSolidBrush(RGB(0, 255, 0));   // 녹색 ( 출발 )
     g_hBrushDest = CreateSolidBrush(RGB(255, 0, 0));   // 적색 ( 목적 )
     g_hBrushOpen = CreateSolidBrush(RGB(0, 0, 255));   // 청색 ( 오픈 )
-    g_hBrushClosed = CreateSolidBrush(RGB(255, 255, 0)); // 노란색 ( 클로즈 )
+    g_hBrushClosed = CreateSolidBrush(RGB(135, 206, 235)); // 하늘색 ( 클로즈 )
     g_hBrushPath = CreateSolidBrush(RGB(255, 255, 0)); // 노란색 ( 최종 경로 )
 
     //윈도우 생성 시 현 윈도우 크기와 동일한 메모리 DC 생성
@@ -350,6 +353,10 @@ void OnPaint(HWND hWnd)
     // 메모리 DC를 클리어 하고
     PatBlt(g_hMemDC, 0, 0, g_MemDCRect.right, g_MemDCRect.bottom, WHITENESS);
 
+    // RenderObstacle, RenderGrid 를 메모리 DC에 출력
+    RenderObstacle(g_hMemDC);
+    RenderGrid(g_hMemDC);
+
     // --- 좌측 고정 UI 렌더링 (카메라 영향 받지 않음) ---
     SetTextColor(g_hMemDC, RGB(0, 0, 0));
     SetBkMode(g_hMemDC, TRANSPARENT); // 글자 배경 투명하게
@@ -363,10 +370,6 @@ void OnPaint(HWND hWnd)
     TextOut(g_hMemDC, 20, 200, L"• 우측 더블클릭   : 목적지 설정", 20);
     TextOut(g_hMemDC, 20, 230, L"• [Space] 키    : A* 길찾기 시작", 26);
     TextOut(g_hMemDC, 20, 260, L"==========================", 26);
-
-    // RenderObstacle, RenderGrid 를 메모리 DC에 출력
-    RenderObstacle(g_hMemDC);
-    RenderGrid(g_hMemDC);
 
     // 메모리 DC에 랜더링이 끝나면, 메모리 DC -> 윈도우 DC로의 출력
     HDC hdc = BeginPaint(hWnd, &ps);

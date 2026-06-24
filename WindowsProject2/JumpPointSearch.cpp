@@ -15,9 +15,12 @@ bool JPS::FindPathStep()
 	JPSNode* currentNode = OpenList.top();
 	OpenList.pop();
 
-	// 클로즈 리스트에 저장
-	CloseList.push_back(currentNode);
+	// 클로즈 리스트 플래그 표시
+	currentNode->isOpen = false;
 	currentNode->isClose = true;
+
+	// 길찾기 횟수마다 1씩 증가 ( 길찾기 스텝마다 다른 색으로 칠하기 위함 )
+	m_currentStepCount++;
 
 	// 목적지에 도달했다면 최단 거리 부모 포인터로 따라가서 ispath 플래그 표시
 	if (currentNode->xPos == m_destX && currentNode->yPos == m_destY)
@@ -352,9 +355,6 @@ bool JPS::FindPathStep()
 		}
 	}
 
-	// 탐색 1스텝이 끝나면 횟수 증가
-	CountOfDirections++;
-
 	// 8방향 탐색 시도 후 목적지를 발견하지 못했으면 false
 	return false;
 }
@@ -372,6 +372,7 @@ void JPS::CreateStartNode(int startX, int startY)
 	m_startY = startY;
 }
 
+// 좌표와 좌표 사이의 G 값 계산
 int JPS::CalculateJumpDistance(int startX, int startY, int endX, int endY) noexcept
 {
 
@@ -380,7 +381,7 @@ int JPS::CalculateJumpDistance(int startX, int startY, int endX, int endY) noexc
 
 	// 대각선은 x, y축 1칸씩 전진하는 것으로 x, y축 좌표의 차이 중에 작은 차이만큼 대각선 전진이 가능
 	int diagonalsteps = min(dx, dy);
-	int straightsteps = std::abs(dx - dy); // 
+	int straightsteps = std::abs(dx - dy); 
 
 	return (15 * diagonalsteps) + (10 * straightsteps);
 }
@@ -497,6 +498,12 @@ std::pair<int, int> JPS::JumpToLL(int curx, int cury, JPSNode* parentNode)
 		// 그리드를 벗어나거나 벽 만나면 종료
 		if (nextX < 0 || g_Tile[nextY][nextX] == 1) return { -1, -1 };
 
+		// 처음 방문하는 타일이면 현제 길찾기 스텝 번호 저장
+		if (m_visitedOrder[nextY][nextX] == 0)
+		{
+			m_visitedOrder[nextY][nextX] = m_currentStepCount;
+		}
+
 		// 목적지 만나면 리턴
 		if (nextX == m_destX && nextY == m_destY) return { nextX, nextY };
 
@@ -525,6 +532,12 @@ std::pair<int, int> JPS::JumpToDD(int curx, int cury, JPSNode* parentNode)
 
 		// 그리드를 벗어나거나 벽 만나면 종료
 		if (nextY >= GRID_HEIGHT || g_Tile[nextY][nextX] == 1) return { -1, -1 };
+
+		// 처음 방문하는 타일이면 현제 길찾기 스텝 번호 저장
+		if (m_visitedOrder[nextY][nextX] == 0)
+		{
+			m_visitedOrder[nextY][nextX] = m_currentStepCount;
+		}
 
 		// 목적지 만나면 리턴
 		if (nextX == m_destX && nextY == m_destY) return { nextX, nextY };
@@ -556,6 +569,12 @@ std::pair<int, int> JPS::JumpToRR(int curx, int cury, JPSNode* parentNode)
 		// 벽 만나거나 그리드 범위를 벗어나면 종료
 		if (nextX >= GRID_WIDTH || g_Tile[nextY][nextX] == 1) return { -1, -1 };
 
+		// 처음 방문하는 타일이면 현제 길찾기 스텝 번호 저장
+		if (m_visitedOrder[nextY][nextX] == 0)
+		{
+			m_visitedOrder[nextY][nextX] = m_currentStepCount;
+		}
+
 		// 목적지 만나면 리턴
 		if (nextX == m_destX && nextY == m_destY) return { nextX, nextY };
 		
@@ -585,6 +604,12 @@ std::pair<int, int> JPS::JumpToUU(int curx, int cury, JPSNode* parentNode)
 
 		// 벽 만나거나 그리드 범위를 벗어나면 종료
 		if (nextY < 0 || g_Tile[nextY][nextX] == 1) return { -1, -1 };
+
+		// 처음 방문하는 타일이면 현제 길찾기 스텝 번호 저장
+		if (m_visitedOrder[nextY][nextX] == 0)
+		{
+			m_visitedOrder[nextY][nextX] = m_currentStepCount;
+		}
 
 		// 목적지 만나면 리턴
 		if (nextX == m_destX && nextY == m_destY) return { nextX, nextY };
@@ -617,6 +642,12 @@ std::pair<int, int> JPS::JumpToRU(int curx, int cury, JPSNode* parentNode)
 
 		// 벽 만나거나 그리드 범위를 벗어나면 종료
 		if ( nextX >= GRID_WIDTH || nextY < 0 || g_Tile[nextY][nextX] == 1) return { -1, -1 };
+
+		// 처음 방문하는 타일이면 현제 길찾기 스텝 번호 저장
+		if (m_visitedOrder[nextY][nextX] == 0)
+		{
+			m_visitedOrder[nextY][nextX] = m_currentStepCount;
+		}
 
 		// 목적지 만나면 리턴
 		if (nextX == m_destX && nextY == m_destY) return { nextX, nextY };
@@ -653,6 +684,12 @@ std::pair<int, int> JPS::JumpToRD(int curx, int cury, JPSNode* parentNode)
 		// 벽 만나거나 그리드 범위를 벗어나면 종료
 		if ( nextX >= GRID_WIDTH || nextY >= GRID_HEIGHT || g_Tile[nextY][nextX] == 1) return { -1, -1 };
 
+		// 처음 방문하는 타일이면 현제 길찾기 스텝 번호 저장
+		if (m_visitedOrder[nextY][nextX] == 0)
+		{
+			m_visitedOrder[nextY][nextX] = m_currentStepCount;
+		}
+
 		// 목적지 만나면 리턴
 		if (nextX == m_destX && nextY == m_destY) return { nextX, nextY };
 
@@ -687,6 +724,12 @@ std::pair<int, int> JPS::JumpToLU(int curx, int cury, JPSNode* parentNode)
 		// 벽 만나거나 그리드 범위를 벗어나면 종료
 		if ( nextX < 0 || nextY < 0 || g_Tile[nextY][nextX] == 1) return { -1, -1 };
 
+		// 처음 방문하는 타일이면 현제 길찾기 스텝 번호 저장
+		if (m_visitedOrder[nextY][nextX] == 0)
+		{
+			m_visitedOrder[nextY][nextX] = m_currentStepCount;
+		}
+
 		// 목적지 만나면 리턴
 		if (nextX == m_destX && nextY == m_destY) return { nextX, nextY };
 
@@ -720,6 +763,12 @@ std::pair<int, int> JPS::JumpToLD(int curx, int cury, JPSNode* parentNode)
 
 		// 벽 만나거나 그리드 범위를 벗어나면 종료
 		if (nextX < 0 || nextY >= GRID_HEIGHT || g_Tile[nextY][nextX] == 1) return { -1, -1 };
+
+		// 처음 방문하는 타일이면 현제 길찾기 스텝 번호 저장
+		if (m_visitedOrder[nextY][nextX] == 0)
+		{
+			m_visitedOrder[nextY][nextX] = m_currentStepCount;
+		}
 
 		// 목적지 만나면 리턴
 		if (nextX == m_destX && nextY == m_destY) return { nextX, nextY };
