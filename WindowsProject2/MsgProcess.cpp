@@ -148,10 +148,10 @@ void OnKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
         // 타일, 오픈 리스트, 노드맵 초기화
         memset(g_Tile, 0, sizeof(g_Tile));
-        g_astar.ClearPathData();
+        g_jps.ClearPathData();
 
         //출발지, 목적지 색도 없애기
-        g_astar.InitAStarPos();
+        g_jps.InitAStarPos();
         g_isfinished = false;
 
         InvalidateRect(hWnd, NULL, false);
@@ -188,6 +188,7 @@ void OnTimer(HWND hWnd, WPARAM wParam)
 
     if (wParam == TIMER_ASTAR_STEP)
     {
+        /*
         // 1스탭 이동 ( 목적지에 도달했으면 true, 아직이면 false )
         bool isfinished = g_astar.FindPathStep();
 
@@ -196,6 +197,20 @@ void OnTimer(HWND hWnd, WPARAM wParam)
 
         // isfinisged가 true거나 오픈 리스트가 비어있다면 실패 한 것으로 타이머 삭제
         if (isfinished || g_astar.IsEmptyList())
+        {
+            KillTimer(hWnd, TIMER_ASTAR_STEP);
+            g_isrunning = false;
+            g_isfinished = true;
+        }
+        */
+        // JPS 1스탭 이동
+        bool isfinished = g_jps.FindPathStep();
+
+        // 화면 갱신
+        InvalidateRect(hWnd, NULL, TRUE);
+
+        // isfinisged가 true거나 오픈 리스트가 비어있다면 실패 한 것으로 타이머 삭제
+        if (isfinished)
         {
             KillTimer(hWnd, TIMER_ASTAR_STEP);
             g_isrunning = false;
@@ -217,8 +232,11 @@ void OnLButtonBLCLK(HWND hWnd, WPARAM wParam, LPARAM lParam)
     int startX = (int)((xPos - camX) / currentDrawSize);
     int startY = (int)((yPos - camY) / currentDrawSize);
 
-    // 출발지 노드 생성
-    g_astar.CreateStartNode(startX, startY);
+    // ASTAR 출발지 노드 생성
+    //g_astar.CreateStartNode(startX, startY);
+
+    // JPS 출발지 노드 생성
+    g_jps.CreateStartNode(startX, startY);
 
     // 더블클릭하면 벽 없애고 출발지 설정
     g_Tile[startY][startX] = 0;
@@ -231,7 +249,7 @@ void OnLButtonBLCLK(HWND hWnd, WPARAM wParam, LPARAM lParam)
 void OnRButtonBLCLK(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 
-    if (g_astar.GetStartNode() == nullptr)
+    if (g_jps.GetStartNode() == nullptr)
     {
         return;
     }
@@ -248,14 +266,25 @@ void OnRButtonBLCLK(HWND hWnd, WPARAM wParam, LPARAM lParam)
     // 더블클릭하면 벽 없애고 목적지 설정
     g_Tile[destY][destX] = 0;
 
-    // 목적지 업데이트
+    /*
+    // ASTAR 목적지 업데이트
     g_astar.SetDestPos(destX, destY);
 
-    // 목적지 좌표를 통해서 H값 계산
+    // ASTAR 목적지 좌표를 통해서 H값 계산
     g_astar.GetStartNode()->CalculateHeuristic(destX, destY);
 
-    // 오픈 리스트에 노드 집어넣기
+    // ASTAR 오픈 리스트에 노드 집어넣기
     g_astar.PushOpenList(g_astar.GetStartNode());
+    */
+
+    // JPS 목적지 업데이트
+    g_jps.SetDestPos(destX, destY);
+
+    // JPS 목적지 좌표 통해서 H값 계산
+    g_jps.GetStartNode()->CalculateHeuristic(destX, destY);
+
+    // JPS 오픈 리스트에 노드 집어넣기
+    g_jps.PushOpenList(g_jps.GetStartNode());
 
     // 목적지 노드 색 그리기
     InvalidateRect(hWnd, NULL, false);

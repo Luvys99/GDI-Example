@@ -1,6 +1,7 @@
 ﻿#include "Render.h"
 #include "ASTAR.h"
 #include "MsgProcess.h"
+#include "JumpPointSearch.h"
 
 void RenderGrid(HDC hdc)
 {
@@ -37,6 +38,11 @@ void RenderGrid(HDC hdc)
 	SelectObject(hdc, hOldPen);
 }
 
+
+// A* 장애물 랜더링 함수
+
+
+// JPS 장애물 랜더링 함수
 void RenderObstacle(HDC hdc)
 {
 	// 확대한 그리드 간격 계산
@@ -54,19 +60,19 @@ void RenderObstacle(HDC hdc)
 			rcTile.bottom = (int)(rcTile.top + currentDrawSize) + 1;
 
 			HBRUSH hTargetBrush = nullptr;
-			Node* pNode = g_astar.GetNodeFromMap(iCntW, iCntH);
+			JPSNode* jpsNode = g_jps.GetNodeFromMap(iCntW, iCntH);
 
 			// 출발지
-			if (iCntW == g_astar.GetStartX() && iCntH == g_astar.GetStartY())
+			if (iCntW == g_jps.GetStartX() && iCntH == g_jps.GetStartY())
 			{
 				hTargetBrush = g_hBrushStart;
 			}
 			// 목적지
-			else if (iCntW == g_astar.GetDestX() && iCntH == g_astar.GetDestY())
+			else if (iCntW == g_jps.GetDestX() && iCntH == g_jps.GetDestY())
 			{
 				hTargetBrush = g_hBrushDest;
 			}
-			else if (pNode != nullptr && pNode->isPath)
+			else if (jpsNode != nullptr && jpsNode->isPath)
 			{
 				hTargetBrush = g_hBrushPath; // 최종 경로
 			}
@@ -76,10 +82,10 @@ void RenderObstacle(HDC hdc)
 				hTargetBrush = g_hTileBrush;
 			}
 			// 오픈 리스트, 클로즈 리스트 색칠
-			else if (pNode != nullptr)
+			else if (jpsNode != nullptr)
 			{
-				if (pNode->isOpen) hTargetBrush = g_hBrushOpen;
-				else if (pNode->isClose) hTargetBrush = g_hBrushClosed;
+				if (jpsNode->isOpen) hTargetBrush = g_hBrushOpen;
+				else if (jpsNode->isClose) hTargetBrush = g_hBrushClosed;
 			}
 
 			if (hTargetBrush != nullptr)
@@ -101,38 +107,38 @@ void RenderObstacle(HDC hdc)
 	{
 		for (int y = 0; y < GRID_HEIGHT; y++)
 		{
-			Node* pNode = g_astar.GetNodeFromMap(x, y);
+			JPSNode* jpsNode = g_jps.GetNodeFromMap(x, y);
 
 			// 노드가 존재하고, 부모 포인터가 연결되어 있다면
-			if (pNode != nullptr && pNode->parentNode != nullptr)
+			if (jpsNode != nullptr && jpsNode->parentNode != nullptr)
 			{
 				int centerX = (int)(camX + (x * currentDrawSize) + (currentDrawSize / 2.0f));
 				int centerY = (int)(camY + (y * currentDrawSize) + (currentDrawSize / 2.0f));
 
-				int parentCenterX = (int)(camX + (pNode->parentNode->xPos * currentDrawSize) + (currentDrawSize / 2.0f));
-				int parentCenterY = (int)(camY + (pNode->parentNode->yPos * currentDrawSize) + (currentDrawSize / 2.0f));
+				int parentCenterX = (int)(camX + (jpsNode->parentNode->xPos * currentDrawSize) + (currentDrawSize / 2.0f));
+				int parentCenterY = (int)(camY + (jpsNode->parentNode->yPos * currentDrawSize) + (currentDrawSize / 2.0f));
 
 				// 분기 처리: 최종 경로(빨간색)는 부모 타일 중앙까지 완벽하게 이어지도록 그림
-				if (pNode->isPath && pNode->parentNode->isPath)
+				if (jpsNode->isPath && jpsNode->parentNode->isPath)
 				{
 					SelectObject(hdc, hPathPen);
 					MoveToEx(hdc, centerX, centerY, NULL);
 					LineTo(hdc, parentCenterX, parentCenterY); // 부모 중앙까지 Full Line
 				}
 				// 일반 탐색 방향 지시선(회색)은 타일 경계선(절반)까지만 그림
-				else
-				{
-					SelectObject(hdc, hDirPen);
+				//else
+				//{
+				//	SelectObject(hdc, hDirPen);
 
-					float dirX = (float)(pNode->parentNode->xPos - x);
-					float dirY = (float)(pNode->parentNode->yPos - y);
+				//	float dirX = (float)(jpsNode->parentNode->xPos - x);
+				//	float dirY = (float)(jpsNode->parentNode->yPos - y);
 
-					int lineEndX = (int)(centerX + dirX * (currentDrawSize / 2.0f));
-					int lineEndY = (int)(centerY + dirY * (currentDrawSize / 2.0f));
+				//	int lineEndX = (int)(centerX + dirX * (currentDrawSize / 2.0f));
+				//	int lineEndY = (int)(centerY + dirY * (currentDrawSize / 2.0f));
 
-					MoveToEx(hdc, centerX, centerY, NULL);
-					LineTo(hdc, lineEndX, lineEndY); // 타일 가장자리까지만 Half Line
-				}
+				//	MoveToEx(hdc, centerX, centerY, NULL);
+				//	LineTo(hdc, lineEndX, lineEndY); // 타일 가장자리까지만 Half Line
+				//}
 			}
 		}
 	}
@@ -154,10 +160,10 @@ void RenderObstacle(HDC hdc)
 		{
 			for (int y = 0; y < GRID_HEIGHT; y++)
 			{
-				Node* pNode = g_astar.GetNodeFromMap(x, y);
+				JPSNode* jpsNode = g_jps.GetNodeFromMap(x, y);
 
 				// 값이 계산된 노드(오픈/클로즈 리스트 및 경로)들만 출력
-				if (pNode != nullptr && (pNode->isOpen || pNode->isClose || pNode->isPath))
+				if (jpsNode != nullptr && (jpsNode->isOpen || jpsNode->isClose || jpsNode->isPath))
 				{
 					RECT rcText;
 					rcText.left = (int)(camX + (x * currentDrawSize));
@@ -169,7 +175,7 @@ void RenderObstacle(HDC hdc)
 					wchar_t szText[64];
 
 					// swprintf_s를 사용하여 유니코드(L) 문자열 포맷팅
-					swprintf_s(szText, _countof(szText), L"G:%d\nH:%d\nF:%d", pNode->g, pNode->h, pNode->f);
+					swprintf_s(szText, _countof(szText), L"G:%d\nH:%d\nF:%d", jpsNode->g, jpsNode->h, jpsNode->f);
 
 					// 사각형 영역(rcText)의 중앙에 맞춰서 텍스트 출력 (유니코드 전용 함수 DrawTextW 사용)
 					DrawTextW(hdc, szText, -1, &rcText, DT_CENTER | DT_VCENTER | DT_WORDBREAK);

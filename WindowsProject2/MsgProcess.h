@@ -1,6 +1,7 @@
 #pragma once
 #include "framework.h"
 #include "ASTAR.h"
+#include "JumpPointSearch.h"
 
 #define MAX_LOADSTRING 100
 #define TIMER_ASTAR_STEP 1
@@ -9,6 +10,7 @@ inline HINSTANCE hInst;                                // 현재 인스턴스입니다.
 inline WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
 inline WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 inline ASTAR g_astar;
+inline JPS g_jps;
 inline bool g_isrunning = false;
 inline bool g_isfinished = false;
 

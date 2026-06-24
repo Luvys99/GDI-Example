@@ -2,7 +2,7 @@
 #include <vector>
 #include "Render.h"
 
-struct Node
+struct ASTARNode
 {
 	int xPos;
 	int yPos;
@@ -12,8 +12,8 @@ struct Node
 	bool isOpen;
 	bool isClose;
 	bool isPath;
-	Node* parentNode;
-	Node()
+	ASTARNode* parentNode;
+	ASTARNode()
 	{
 		parentNode = nullptr;
 		h = 0, g = 0;
@@ -37,13 +37,13 @@ public:
 	ASTAR() : startNode(nullptr), m_startX(-1), m_startY(-1), m_destX(-1), m_destY(-1) { }
 	~ASTAR() {}
 
-	inline Node* GetStartNode() const noexcept { return startNode; }
+	inline ASTARNode* GetStartNode() const noexcept { return startNode; }
 	inline int GetStartX() const noexcept { return m_startX; }
 	inline int GetStartY() const noexcept { return m_startY; }
 	inline int GetDestX() const noexcept { return m_destX; }
 	inline int GetDestY() const noexcept { return m_destY; }
 
-	inline void PushOpenList(Node* node) noexcept
+	inline void PushOpenList(ASTARNode* node) noexcept
 	{
 		OpenList.push_back(node);
 	}
@@ -60,7 +60,7 @@ public:
 	bool FindPathStep();
 
 	// 유효한 노드인지 검사하는 함수
-	bool IsValidNode(int curX, int curY, int xPos, int yPos, Node* node) const noexcept;
+	bool IsValidNode(int curX, int curY, int xPos, int yPos, ASTARNode* node) const noexcept;
 
 	// 길찾기 할 때마다 초기화함
 	void InitAStarPos() noexcept;
@@ -70,8 +70,8 @@ public:
 
 	// 클로즈 리스트를 순회해서 좌표를 찾는 것은 탐색이 진행될수록
 	// 순회해야 하는 리스트가 너무 커지기 때문에 검사 속도가 굉장히 느려진다.
-	Node* m_nodeMap[GRID_HEIGHT][GRID_WIDTH];
-	Node* GetNodeFromMap(int xPos, int yPos);
+	ASTARNode* m_nodeMap[GRID_HEIGHT][GRID_WIDTH];
+	ASTARNode* GetNodeFromMap(int xPos, int yPos);
 
 private:
 	// GDI 그리기 위해 저장하는 출발점, 목적지 좌표
@@ -80,6 +80,6 @@ private:
 	int m_destX;
 	int m_destY;
 
-	Node* startNode;
-	std::vector<Node*> OpenList;
+	ASTARNode* startNode;
+	std::vector<ASTARNode*> OpenList;
 };

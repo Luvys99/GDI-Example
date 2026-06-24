@@ -6,7 +6,7 @@
 void ASTAR::CreateStartNode(int startX, int startY) noexcept
 {
 	// 시작 노드 생성
-	startNode = new Node();
+	startNode = new ASTARNode();
 	startNode->xPos = startX;
 	startNode->yPos = startY;
 
@@ -32,7 +32,7 @@ bool ASTAR::FindPathStep()
 
 	// 오픈 리스트에서 F 값이 가장 낮은 노드를 맨 뒤로 정렬 ( 내림차순 )
 	// vector에서 맨 앞 노드를 꺼내면 앞으로 원소들을 끌어와야 하기 때문에 오버헤드가 발생함
-	Node* currentNode = OpenList.back();
+	ASTARNode* currentNode = OpenList.back();
 	OpenList.pop_back(); // 뒤에서 빼면 원소의 이동이 없어짐
 
 	currentNode->isOpen = false;
@@ -42,7 +42,7 @@ bool ASTAR::FindPathStep()
 	if (currentNode->xPos == m_destX && currentNode->yPos == m_destY)
 	{
 		// 역주적 로직 실행해서 최단 경로에 대한 플래그를 찍어주기
-		Node* traceNode = currentNode;
+		ASTARNode* traceNode = currentNode;
 		while (traceNode != nullptr)
 		{
 			traceNode->isPath = true;
@@ -61,7 +61,7 @@ bool ASTAR::FindPathStep()
 		int nx = currentNode->xPos + dx[i];
 		int ny = currentNode->yPos + dy[i];
 
-		Node* neighborNode = GetNodeFromMap(nx, ny);
+		ASTARNode* neighborNode = GetNodeFromMap(nx, ny);
 
 		// 벽이거나 맵 밖이거나 클로드 노드라면 다음 방향으로 넘어감
 		if (IsValidNode(currentNode->xPos, currentNode->yPos, nx, ny, neighborNode) == false) continue;
@@ -72,7 +72,7 @@ bool ASTAR::FindPathStep()
 		// 유효한 노드가 오픈 리스트에 없다면? 한 번도 탐색하지 않은 길인 것 
 		if (neighborNode == nullptr)
 		{
-			neighborNode = new Node();
+			neighborNode = new ASTARNode();
 			neighborNode->xPos = nx;
 			neighborNode->yPos = ny;
 
@@ -106,7 +106,7 @@ bool ASTAR::FindPathStep()
 	// 오픈 리스트 f 값을 기준으로 내림차순
 	// sort는 시작점, 끝점, 정렬 규칙을 인자로 받고 람다 함수를 통해서 정렬의 기준을 정의함
 	// OpenList의 두 개의 노드를 꺼내서 비교 했을 때 f값이 더 작은 노드가 앞으로 오게끔 정렬하라는 것
-	std::sort(OpenList.begin(), OpenList.end(), [](Node* a, Node* b) { 
+	std::sort(OpenList.begin(), OpenList.end(), [](ASTARNode* a, ASTARNode* b) {
 		if (a->f == b->f)
 		{
 			// F가 같으면 h가 작은 노드를 뒤로 보냄 ( 내림 차순 )
@@ -122,7 +122,7 @@ bool ASTAR::FindPathStep()
 
 }
 
-bool ASTAR::IsValidNode(int curX, int curY, int xPos, int yPos, Node* node) const noexcept
+bool ASTAR::IsValidNode(int curX, int curY, int xPos, int yPos, ASTARNode* node) const noexcept
 {
 
 	// 맵 밖인지 검사
@@ -146,7 +146,7 @@ bool ASTAR::IsValidNode(int curX, int curY, int xPos, int yPos, Node* node) cons
 
 }
 
-Node* ASTAR::GetNodeFromMap(int xPos, int yPos)
+ASTARNode* ASTAR::GetNodeFromMap(int xPos, int yPos)
 {
 	if (xPos < 0 || xPos >= GRID_WIDTH || yPos < 0 || yPos >= GRID_HEIGHT) return nullptr;
 
