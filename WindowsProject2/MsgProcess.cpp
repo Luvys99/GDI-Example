@@ -144,10 +144,27 @@ void OnMouseMove(HWND hWnd, LPARAM lParam)
 
 void OnKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
+    // 전체 초기화
     if (wParam == 'C' || wParam == 'c')
     {
         // 타일, 오픈 리스트, 노드맵 초기화
         memset(g_Tile, 0, sizeof(g_Tile));
+        g_jps.ClearPathData();
+
+        //출발지, 목적지 색도 없애기
+        g_jps.InitAStarPos();
+        g_isfinished = false;
+
+        // 타일 색 초기화
+        memset(g_jps.m_visitedOrder, 0, sizeof(g_jps.m_visitedOrder));
+
+        InvalidateRect(hWnd, NULL, false);
+    }
+
+    // 벽 빼고 초기화
+    if (wParam == 'R' || wParam == 'r')
+    {
+        // 오픈 리스트, 노드맵 초기화
         g_jps.ClearPathData();
 
         //출발지, 목적지 색도 없애기
@@ -208,13 +225,17 @@ void OnTimer(HWND hWnd, WPARAM wParam)
         */
         // JPS 1스탭 이동
         bool isfinished = g_jps.FindPathStep();
+        if (isfinished)
+        {
+            g_jps.Bresenhamdrawline();
+        }
 
         // 화면 갱신
         InvalidateRect(hWnd, NULL, TRUE);
 
         // isfinisged가 true거나 오픈 리스트가 비어있다면 실패 한 것으로 타이머 삭제
         if (isfinished)
-        {
+        { 
             KillTimer(hWnd, TIMER_ASTAR_STEP);
             g_isrunning = false;
             g_isfinished = true;
@@ -252,7 +273,8 @@ void OnLButtonBLCLK(HWND hWnd, WPARAM wParam, LPARAM lParam)
 void OnRButtonBLCLK(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 
-    if (g_jps.GetStartNode() == nullptr)
+    // 출발지가 찍혀있지 않다면 목적지가 안 찍히도록
+    if (g_jps.GetStartX() == -1)
     {
         return;
     }
@@ -312,7 +334,7 @@ void OnMouseWheel(HWND hWnd, WPARAM wParam, LPARAM lParam)
     // 배율 업데이트
     if (zDelta > 0) {
         scale *= 1.1f;
-        if (scale > 5.0f) scale = 5.0f; // 최대 확대 배율
+        if (scale > 20.0f) scale = 20.0f; // 최대 확대 배율
     }
     else {
         scale /= 1.1f;
@@ -365,11 +387,12 @@ void OnPaint(HWND hWnd)
     TextOut(g_hMemDC, 20, 50, L"• 좌클릭 드래그 : 장애물 토글", 18);
     TextOut(g_hMemDC, 20, 80, L"• 우클릭 드래그 : 화면 이동 (패닝)", 22);
     TextOut(g_hMemDC, 20, 110, L"• 마우스 휠     : 확대 / 축소", 21);
-    TextOut(g_hMemDC, 20, 140, L"• [C] 키        : 초기화", 20);
-    TextOut(g_hMemDC, 20, 170, L"• 좌측 더블클릭   : 출발지 설정", 20);
-    TextOut(g_hMemDC, 20, 200, L"• 우측 더블클릭   : 목적지 설정", 20);
-    TextOut(g_hMemDC, 20, 230, L"• [Space] 키    : A* 길찾기 시작", 26);
-    TextOut(g_hMemDC, 20, 260, L"==========================", 26);
+    TextOut(g_hMemDC, 20, 140, L"• [C, c] 키      : 전체 초기화", 24);
+    TextOut(g_hMemDC, 20, 170, L"• [R, r] 키      : 벽 제외 초기화", 26);
+    TextOut(g_hMemDC, 20, 200, L"• 좌측 더블클릭   : 출발지 설정", 20);
+    TextOut(g_hMemDC, 20, 230, L"• 우측 더블클릭   : 목적지 설정", 20);
+    TextOut(g_hMemDC, 20, 260, L"• [Space] 키    : JPS 길찾기 시작", 26);
+    TextOut(g_hMemDC, 20, 290, L"==========================", 26);
 
     // 메모리 DC에 랜더링이 끝나면, 메모리 DC -> 윈도우 DC로의 출력
     HDC hdc = BeginPaint(hWnd, &ps);

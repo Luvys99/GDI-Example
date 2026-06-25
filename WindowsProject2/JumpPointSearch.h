@@ -3,9 +3,6 @@
 #include <queue>
 #include "Render.h"
 
-// 방향
-
-
 struct JPSNode
 {
 	int xPos;
@@ -55,9 +52,9 @@ struct CompareNode
 class JPS
 {
 public:
-	JPS() : startNode(nullptr), m_startX(-1), m_startY(-1), m_destX(-1), m_destY(-1), m_currentStepCount(0){ }
+	JPS() : m_startNode(nullptr), m_startX(-1), m_startY(-1), m_destX(-1), m_destY(-1), m_currentStepCount(0){ }
 
-	inline JPSNode* GetStartNode() const noexcept { return startNode; }
+	inline JPSNode* GetStartNode() const noexcept { return m_startNode; }
 	inline int GetStartX() const noexcept { return m_startX; }
 	inline int GetStartY() const noexcept { return m_startY; }
 	inline int GetDestX() const noexcept { return m_destX; }
@@ -65,7 +62,7 @@ public:
 
 	inline void PushOpenList(JPSNode* node) noexcept
 	{
-		OpenList.push(node);
+		m_OpenList.push(node);
 	}
 
 	// 시작 노드 생성
@@ -89,6 +86,9 @@ public:
 	// JPS 알고리즘으로 길 찾기
 	bool FindPathStep();
 
+	// 브리즌헴 직선 긋기
+	void Bresenhamdrawline(); 
+
 	// 8방향으로 탐색하는 함수들
 	// 수직, 수평
 	std::pair<int, int> JumpToLL(int curx, int cury, JPSNode* parentNode);
@@ -102,6 +102,7 @@ public:
 	std::pair<int, int> JumpToLD(int curx, int cury, JPSNode* parentNode);
 
 	JPSNode* GetNodeFromMap(int xPos, int yPos) const noexcept;
+	std::vector<JPSNode*> GetPathVec() const noexcept;
 
 	int m_visitedOrder[GRID_HEIGHT][GRID_WIDTH] = { 0, 0 };
 	int m_currentStepCount; // 탐색 횟수 ( 횟수 따라 색 변경 )
@@ -111,9 +112,13 @@ private:
 	int m_destX;
 	int m_destY;
 
-	JPSNode* startNode;
+	JPSNode* m_startNode;
 	// 우선순위 큐로 구현한 오픈 리스트( 최소 힙 )
-	std::priority_queue<JPSNode*,std::vector<JPSNode*>, CompareNode> OpenList;
+	std::priority_queue<JPSNode*,std::vector<JPSNode*>, CompareNode> m_OpenList;
 
+	// 노드저장할 맵
 	JPSNode* m_nodeMap[GRID_HEIGHT][GRID_WIDTH];
+
+	// 출발지부터 목적지까지의 최종경로 노드 저장하는 vector
+	std::vector<JPSNode*> m_path;
 };

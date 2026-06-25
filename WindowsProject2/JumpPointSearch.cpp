@@ -1,19 +1,21 @@
 #include "JumpPointSearch.h"
+#include "Bresenhamdrawline.h"
 #include <algorithm>
 #include <cmath>
+#include <string>
 
 bool JPS::FindPathStep()
 {
 
 	// 오픈 리스트에 노드가 없다면 탐색 종료
-	if (OpenList.empty())
+	if (m_OpenList.empty())
 	{
 		return false;
 	}
 
 	// 오픈 리스트에서 노드 꺼냄
-	JPSNode* currentNode = OpenList.top();
-	OpenList.pop();
+	JPSNode* currentNode = m_OpenList.top();
+	m_OpenList.pop();
 
 	// 클로즈 리스트 플래그 표시
 	currentNode->isOpen = false;
@@ -29,8 +31,13 @@ bool JPS::FindPathStep()
 		while (traceNode != nullptr)
 		{
 			traceNode->isPath = true;
+			// 선 긋기할 때 비교할 노드들 목적지부터 출발지까지 저장
+			m_path.push_back(traceNode);
 			traceNode = traceNode->parentNode;
 		}
+
+		// 출발지부터 시작하도록 벡터 순서 를 뒤집음
+		std::reverse(m_path.begin(), m_path.end());
 		return true;
 	}
 
@@ -362,11 +369,11 @@ bool JPS::FindPathStep()
 void JPS::CreateStartNode(int startX, int startY)
 {
 	// 시작 노드 생성
-	startNode = new JPSNode();
-	startNode->xPos = startX;
-	startNode->yPos = startY;
+	m_startNode = new JPSNode();
+	m_startNode->xPos = startX;
+	m_startNode->yPos = startY;
 
-	m_nodeMap[startY][startX] = startNode;
+	m_nodeMap[startY][startX] = m_startNode;
 
 	m_startX = startX;
 	m_startY = startY;
@@ -414,7 +421,7 @@ void JPS::CreateNodeorUpateNode(int targetxpos, int targetypos, JPSNode* parentN
 
 		targetNode->isOpen = true;
 		m_nodeMap[ypos][xpos] = targetNode;
-		OpenList.push(targetNode); // 우선순위 큐에 삽입
+		m_OpenList.push(targetNode); // 우선순위 큐에 삽입
 	}
 	else if (targetNode->isOpen)
 	{
@@ -426,7 +433,7 @@ void JPS::CreateNodeorUpateNode(int targetxpos, int targetypos, JPSNode* parentN
 			targetNode->CalculateHeuristic(m_destX, m_destY);
 
 			// 기존 노드를 수정했으므로, 갱신된(더 작아진) F값으로 큐에 한 번 더 밀어 넣음 (Lazy Deletion)
-			OpenList.push(targetNode);
+			m_OpenList.push(targetNode);
 		}
 	}
 
@@ -459,6 +466,8 @@ void JPS::InitAStarPos() noexcept
 
 void JPS::ClearPathData() noexcept
 {
+	// 시작 노드 초기화
+	m_startNode = nullptr;
 
 	// 2D 노드 맵 순회해서 메모리 해제
 	for (int y = 0; y < GRID_HEIGHT; y++)
@@ -475,10 +484,14 @@ void JPS::ClearPathData() noexcept
 	}
 
 	// 오픈 리스트도 비워주기 
-	while (!OpenList.empty())
+	while (!m_OpenList.empty())
 	{
-		OpenList.pop();
+		m_OpenList.pop();
 	}
+
+	// 브레즌헴 직선에 해당하는 노드들 
+	m_path.clear();
+	
 
 }
 
@@ -789,4 +802,66 @@ std::pair<int, int> JPS::JumpToLD(int curx, int cury, JPSNode* parentNode)
 		if ((isTopWall && isRightTopWallEmpty) || (isRightWall && isRightBottomWallEmpty)) return { nextX, nextY };
 		
 	}
+}
+
+void JPS::Bresenhamdrawline()
+{
+
+	int curr_idx = 0;
+	int check_idx = 2;
+	int safe_idx = 1;
+	std::vector<POINT> vec;
+
+	// 출발지부터 목적지의 노드 갯수보다 인덱스가 같아지거나 커지면 종료
+	while (check_idx < m_path.size())
+	{
+		int startX = m_path[curr_idx]->xPos;
+		int startY = m_path[curr_idx]->yPos;
+		int endX = m_path[check_idx]->xPos;
+		int endY = m_path[check_idx]->yPos;
+
+		// 함수를 통해서 직선의 좌표들이 담겨있는 vec를 리턴 받음
+		// 정적 함수 호출해야 되서 네임 스페이스 붙임
+		vec = Bresenhamdrawline::drawline(startX, startY, endX, endY);
+
+		bool isWallhit = false;
+
+		// 리턴받은 좌표들을 순회해서 g_TIle배열의 벽과 겹치는지 체크
+		for (POINT pos : vec)
+		{
+			if (g_Tile[pos.y][pos.x] == 1)
+			{
+				isWallhit = true;
+				break;
+			}
+		}
+
+		// 직선 하나와 벽과 겹치는지 체크 후 인덱스 갱신
+		if(!isWallhit)
+		{
+			// 체크한 노드의 인덱스까지 가능하다고 갱신
+			safe_idx = check_idx;
+			check_idx++;
+		}
+		else
+		{
+			// safe_idx까지 curr_idx의 노드의 연결을 확정 짓는다.
+			m_path[safe_idx]->parentNode = m_path[curr_idx];
+			// 마지막 연결한 곳 부터 현재 노드로 갱신
+			curr_idx = safe_idx;
+
+			// 새로운 비교 기준점 갱신 ( 현재 노드의 다다음 노드 
+			check_idx = curr_idx + 2; 
+			safe_idx = curr_idx + 1;
+		}
+	}
+
+	// 반복문에서 나왔다는 것은 목적지 까지 check_idx가 도달했다는 뜻( 목적지의 노드를 현재 인덱스의 노드와 연결 )
+	m_path.back()->parentNode = m_path[curr_idx];
+
+}
+
+std::vector<JPSNode*> JPS::GetPathVec() const noexcept
+{
+	return m_path;
 }

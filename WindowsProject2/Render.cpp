@@ -148,10 +148,44 @@ void RenderObstacle(HDC hdc)
 
 	// 색칠이 끝난 후에 부모를 향하는 선 그리기
 	// 바탕이 다 칠해진 후, 그 위에 부모를 향하는 선(Line)을 덧그립니다.
-	HPEN hDirPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0)); // 부모 방향 지시선 (회색)
+	HPEN hDirPen = CreatePen(PS_SOLID, 4, RGB(0, 0, 255)); // 부모 방향 지시선 ( 굴은 파란색 )
 	HPEN hPathPen = CreatePen(PS_SOLID, 4, RGB(255, 0, 0));    // 최종 경로 굵은 선 (빨간색)
 	HPEN hOldPen = (HPEN)SelectObject(hdc, hDirPen);
 
+	std::vector<JPSNode*> m_path = g_jps.GetPathVec();
+
+	if (!m_path.empty())
+	{
+		JPSNode* traceNode = m_path.back();
+
+		// 부모가 없을 때까지(즉, 시작점에 도달할 때까지) 반복
+		while (traceNode != nullptr && traceNode->parentNode != nullptr)
+		{
+			// 현재 노드의 중앙 좌표 계산
+			int centerX = (int)(camX + (traceNode->xPos * currentDrawSize) + (currentDrawSize / 2.0f));
+			int centerY = (int)(camY + (traceNode->yPos * currentDrawSize) + (currentDrawSize / 2.0f));
+
+			// 부모 노드의 중앙 좌표 계산
+			int parentCenterX = (int)(camX + (traceNode->parentNode->xPos * currentDrawSize) + (currentDrawSize / 2.0f));
+			int parentCenterY = (int)(camY + (traceNode->parentNode->yPos * currentDrawSize) + (currentDrawSize / 2.0f));
+
+			// 두 좌표를 굵은 선으로 연결!
+			SelectObject(hdc, hPathPen);
+			MoveToEx(hdc, centerX, centerY, NULL);
+			LineTo(hdc, parentCenterX, parentCenterY);
+
+			// 다음 렌더링을 위해 기준점을 부모 노드로 이동
+			traceNode = traceNode->parentNode;
+		}
+	}
+
+	// 자원 해제
+	SelectObject(hdc, hOldPen);
+	DeleteObject(hDirPen);
+	DeleteObject(hPathPen);
+
+	/*
+	// 기존 부모노드 따라가서 선을 그리는 로직
 	for (int x = 0; x < GRID_WIDTH; x++)
 	{
 		for (int y = 0; y < GRID_HEIGHT; y++)
@@ -170,32 +204,15 @@ void RenderObstacle(HDC hdc)
 				// 분기 처리: 최종 경로(빨간색)는 부모 타일 중앙까지 완벽하게 이어지도록 그림
 				if (jpsNode->isPath && jpsNode->parentNode->isPath)
 				{
-					SelectObject(hdc, hPathPen);
+
+					SelectObject(hdc, hDirPen);
 					MoveToEx(hdc, centerX, centerY, NULL);
 					LineTo(hdc, parentCenterX, parentCenterY); // 부모 중앙까지 Full Line
 				}
-				// 일반 탐색 방향 지시선(회색)은 타일 경계선(절반)까지만 그림
-				//else
-				//{
-				//	SelectObject(hdc, hDirPen);
-
-				//	float dirX = (float)(jpsNode->parentNode->xPos - x);
-				//	float dirY = (float)(jpsNode->parentNode->yPos - y);
-
-				//	int lineEndX = (int)(centerX + dirX * (currentDrawSize / 2.0f));
-				//	int lineEndY = (int)(centerY + dirY * (currentDrawSize / 2.0f));
-
-				//	MoveToEx(hdc, centerX, centerY, NULL);
-				//	LineTo(hdc, lineEndX, lineEndY); // 타일 가장자리까지만 Half Line
-				//}
 			}
 		}
 	}
-
-	// 자원 해제
-	SelectObject(hdc, hOldPen);
-	DeleteObject(hDirPen);
-	DeleteObject(hPathPen);
+	*/
 
 	// 노드에 G, H, F 값 그리기
 	// 글자 배경을 투명하게 설정 (타일 색을 가리지 않기 위함)
@@ -237,4 +254,5 @@ void RenderObstacle(HDC hdc)
 		SetTextColor(hdc, oldTextColor);
 	}
 
+	
 }
